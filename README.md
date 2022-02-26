@@ -5,25 +5,25 @@
 `main.go`
 
 ```go
-	baseURL := "http://xxx.com"
-	e := &engine.ConcurrentEngine{
-		Scheduler:   &scheduler.QueuedScheduler{},
-		WorderCount: 100,
-		ItemChan: persist.ItemSaver(persist.Option{
-			SaveDBType:  config.DB_TYPE_MYSQL,
-			WorkerCount: 10,
-		}),
-	}
-	e.Run(engine.Request{
-		Url: baseURL + "/xxx/xxx",
-		ParserFunc: func(b []byte) engine.ParseResult {
-			return parser.ParseList(b, baseURL)
-		},
-    // 没有分页时，此解析器不需要
-		ParsePagingFunc: func(body []byte) engine.ParseResult {
-			return parser.ParseListPaging(body, baseURL)
-		},
-	})
+baseURL := "http://xxx.com"
+e := &engine.ConcurrentEngine{
+  Scheduler:   &scheduler.QueuedScheduler{},
+  WorderCount: 100,
+  ItemChan: persist.ItemSaver(persist.Option{
+    SaveDBType:  config.DB_TYPE_MYSQL,
+    WorkerCount: 10,
+  }),
+}
+e.Run(engine.Request{
+  Url: baseURL + "/xxx/xxx",
+  ParserFunc: func(b []byte) engine.ParseResult {
+    return parser.ParseList(b, baseURL)
+  },
+  // 没有分页时，此解析器不需要
+  ParsePagingFunc: func(body []byte) engine.ParseResult {
+    return parser.ParseListPaging(body, baseURL)
+  },
+})
 ```
 
 #### Engine
