@@ -17,7 +17,7 @@ e := &engine.ConcurrentEngine{
     RateLimit: time.NewTicker(50 * time.Millisecond).C,
   },
   // 程序终止逻辑，自从最后一次爬取，过5分钟后仍然没有收到爬取的网页时，程序就会终止
-  WaitingForFinish: time.After(5 * time.Minute),
+  WaitingForFinish: time.NewTicker(5 * time.Minute).C,
 }
 e.Run(engine.Request{
   Url: baseURL + "/xxx/xxx",
