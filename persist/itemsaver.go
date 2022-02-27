@@ -21,11 +21,15 @@ var (
 	esClient *elastic.Client
 	DB       *gorm.DB
 
+	defaultWorkerCount = 1
+
 	saveDBType = ""
 )
 
 type Option struct {
-	SaveDBType  string
+	// which db to save
+	SaveDBType string
+	// how many workers to save items
 	WorkerCount int
 }
 
@@ -79,7 +83,7 @@ func ItemSaver(opt Option) chan engine.Item {
 	out := make(chan engine.Item)
 
 	if opt.WorkerCount <= 0 {
-		opt.WorkerCount = 1
+		opt.WorkerCount = defaultWorkerCount
 	}
 
 	for i := 0; i < opt.WorkerCount; i++ {

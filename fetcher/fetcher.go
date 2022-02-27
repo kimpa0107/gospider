@@ -17,42 +17,55 @@ import (
 const storageDir = "storage/"
 
 var (
-	rateLimit = time.NewTicker(10 * time.Millisecond).C
-	client    *http.Client
+	client *http.Client
+
+	option     Option
+	optionInit = false
+
+	defaultRateLimit = time.NewTicker(50 * time.Millisecond).C
 )
 
-func getHttpClient() (*http.Client, error) {
-	return &http.Client{}, nil
+type Option struct {
+	// wait for fetching each url
+	RateLimit <-chan time.Time
+	// whether use proxy
+	UseProxy bool
+	// whether cache the fetched content
+	CacheData bool
+	// whether read from cache file first
+	ReadCache bool
 }
 
-func getProxyClient() (*http.Client, error) {
-	if client != nil {
-		return client, nil
+// init fetcher option once
+func Init(opt Option) {
+	if optionInit {
+		return
 	}
 
-	parsedURL, err := url.Parse(fmt.Sprintf("%s://%s:%d",
-		config.PROXY_SCHEME,
-		config.PROXY_HOST,
-		config.PROXY_PORT))
-	if err != nil {
-		return nil, err
+	option = opt
+
+	if option.RateLimit == nil {
+		option.RateLimit = defaultRateLimit
 	}
-	client = &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyURL(parsedURL),
-		},
+
+	if option.UseProxy {
+		client, _ = getProxyClient()
+	} else {
+		client, _ = getHttpClient()
 	}
-	return client, nil
+
+	optionInit = true
 }
 
 func Fetch(url string) ([]byte, error) {
-	// absFilePath := urlToFilepath(url)
-	// if utils.IsFileExists(absFilePath) {
-	// 	// log.Printf("[INFO] File %s exists, skip fetching.\n", absFilePath)
-	// 	return ioutil.ReadFile(absFilePath)
-	// }
+	if option.ReadCache {
+		absFilePath := urlToFilepath(url)
+		if utils.IsFileExists(absFilePath) {
+			return ioutil.ReadFile(absFilePath)
+		}
+	}
 
-	<-rateLimit
+	<-option.RateLimit
 
 	client, _ := getProxyClient()
 	req, _ := http.NewRequest("GET", url, nil)
@@ -76,9 +89,35 @@ func Fetch(url string) ([]byte, error) {
 		body = append(body, line...)
 	}
 
-	// cache(url, body)
+	if option.CacheData {
+		cache(url, body)
+	}
 
 	return body, err
+}
+
+func getHttpClient() (*http.Client, error) {
+	return &http.Client{}, nil
+}
+
+func getProxyClient() (*http.Client, error) {
+	if client != nil {
+		return client, nil
+	}
+
+	parsedURL, err := url.Parse(fmt.Sprintf("%s://%s:%d",
+		config.PROXY_SCHEME,
+		config.PROXY_HOST,
+		config.PROXY_PORT))
+	if err != nil {
+		return nil, err
+	}
+	client = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyURL(parsedURL),
+		},
+	}
+	return client, nil
 }
 
 // write content to file for caching

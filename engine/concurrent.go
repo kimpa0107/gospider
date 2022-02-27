@@ -9,9 +9,11 @@ import (
 )
 
 type ConcurrentEngine struct {
-	Scheduler   Scheduler
-	WorderCount int
-	ItemChan    chan Item
+	Scheduler        Scheduler
+	WorkerCount      int
+	ItemChan         chan Item
+	FetcherOption    fetcher.Option
+	WaitingForFinish <-chan time.Time
 }
 
 type Scheduler interface {
@@ -33,6 +35,9 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 	}()
 
 	r := seeds[0]
+
+	// init fetcher first
+	fetcher.Init(e.FetcherOption)
 
 	body, err := fetcher.Fetch(r.Url)
 	if err != nil {
@@ -66,7 +71,7 @@ func (e *ConcurrentEngine) run(seeds ...Request) {
 	out := make(chan ParseResult)
 	e.Scheduler.Run()
 
-	for i := 0; i < e.WorderCount; i++ {
+	for i := 0; i < e.WorkerCount; i++ {
 		createWorker(e.Scheduler.WorkerChan(), out, e.Scheduler)
 	}
 
@@ -88,7 +93,7 @@ func (e *ConcurrentEngine) run(seeds ...Request) {
 			}
 
 		// after all request done, break
-		case <-time.After(5 * time.Minute):
+		case <-e.WaitingForFinish:
 			runtime.GC()
 			return
 		}

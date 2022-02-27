@@ -1,8 +1,11 @@
 package main
 
 import (
+	"time"
+
 	"jasper.com/gospider/config"
 	"jasper.com/gospider/engine"
+	"jasper.com/gospider/fetcher"
 	"jasper.com/gospider/parser"
 	"jasper.com/gospider/persist"
 	"jasper.com/gospider/scheduler"
@@ -12,11 +15,15 @@ func main() {
 	baseURL := "https:/xxx.com"
 	e := &engine.ConcurrentEngine{
 		Scheduler:   &scheduler.QueuedScheduler{},
-		WorderCount: 100,
+		WorkerCount: 100,
 		ItemChan: persist.ItemSaver(persist.Option{
 			SaveDBType:  config.DB_TYPE_MYSQL,
 			WorkerCount: 10,
 		}),
+		FetcherOption: fetcher.Option{
+			RateLimit: time.NewTicker(50 * time.Millisecond).C,
+		},
+		WaitingForFinish: time.After(5 * time.Minute),
 	}
 	e.Run(engine.Request{
 		Url: baseURL + "/xxx/xxx",
