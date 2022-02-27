@@ -23,7 +23,7 @@ func main() {
 		FetcherOption: fetcher.Option{
 			RateLimit: time.NewTicker(50 * time.Millisecond).C,
 		},
-		WaitingForFinish: time.After(5 * time.Minute),
+		WaitingForFinish: time.NewTicker(5 * time.Minute).C,
 	}
 	e.Run(engine.Request{
 		Url: baseURL + "/xxx/xxx",
