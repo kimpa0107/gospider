@@ -3,11 +3,13 @@ package fetcher
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"jasper.com/gospider/config"
@@ -57,7 +59,7 @@ func Init(opt Option) {
 	optionInit = true
 }
 
-func Fetch(url string) ([]byte, error) {
+func Fetch(url string, method string, data map[string]interface{}) ([]byte, error) {
 	if option.ReadCache {
 		absFilePath := urlToFilepath(url)
 		if utils.IsFileExists(absFilePath) {
@@ -67,8 +69,13 @@ func Fetch(url string) ([]byte, error) {
 
 	<-option.RateLimit
 
-	client, _ := getProxyClient()
-	req, _ := http.NewRequest("GET", url, nil)
+	var payload io.Reader
+	if data != nil {
+		payload = strings.NewReader(utils.ToJSON(data))
+	}
+
+	req, _ := http.NewRequest(method, url, payload)
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36")
 
 	resp, err := client.Do(req)
@@ -93,7 +100,7 @@ func Fetch(url string) ([]byte, error) {
 		cache(url, body)
 	}
 
-	return body, err
+	return body, nil
 }
 
 func getHttpClient() (*http.Client, error) {

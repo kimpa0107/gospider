@@ -39,7 +39,7 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 	// init fetcher first
 	fetcher.Init(e.FetcherOption)
 
-	body, err := fetcher.Fetch(r.Url)
+	body, err := fetcher.Fetch(r.Url, r.Method, r.Body)
 	if err != nil {
 		return
 	}

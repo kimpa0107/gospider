@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/md5"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,8 +20,17 @@ func MD5(s string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+func Base64Encode(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
+}
+
 func Base64Decode(str string) string {
 	b, _ := base64.StdEncoding.DecodeString(str)
+	return string(b)
+}
+
+func ToJSON(data interface{}) string {
+	b, _ := json.Marshal(data)
 	return string(b)
 }
 

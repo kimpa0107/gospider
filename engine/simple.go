@@ -11,7 +11,7 @@ type SimpleEngine struct {
 func (e SimpleEngine) Run(seeds ...Request) {
 	r := seeds[0]
 
-	body, err := fetcher.Fetch(r.Url)
+	body, err := fetcher.Fetch(r.Url, r.Method, r.Body)
 	if err != nil {
 		return
 	}

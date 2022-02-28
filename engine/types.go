@@ -1,7 +1,10 @@
 package engine
 
 type Request struct {
-	Url             string
+	Url    string
+	Method string
+	Body   map[string]interface{}
+
 	ParserFunc      func([]byte) ParseResult
 	ParsePagingFunc func([]byte) ParseResult
 }
